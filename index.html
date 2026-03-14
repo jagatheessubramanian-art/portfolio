@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jagathees · Web developer · custom cursor</title>
+  <!-- Bootstrap 5 + Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <!-- Google Font: Inter (clean) -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- AOS -->
+  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+  <!-- EmailJS -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+  <!-- Three.js (minimal background) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0b0e14;
+      color: #edf2fb;
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* ---------- CUSTOM CURSOR (DESKTOP ONLY) ---------- */
+    @media (min-width: 992px) {
+      /* hide default cursor */
+      * {
+        cursor: none !important;
+      }
+
+      /* cursor outer (glow orb) */
+      .custom-cursor-outer {
+        width: 40px;
+        height: 40px;
+        border: 2px solid rgba(160, 200, 255, 0.7);
+        border-radius: 50%;
+        position: fixed;
+        pointer-events: none;
+        z-index: 99999;
+        transition: transform 0.15s ease, width 0.2s, height 0.2s, background 0.2s;
+        transform: translate(-50%, -50%);
+        backdrop-filter: blur(2px);
+        background: rgba(70, 130, 250, 0.1);
+        box-shadow: 0 0 20px #3a7bff66;
+        will-change: left, top;
+      }
+
+      /* cursor inner (dot) */
+      .custom-cursor-inner {
+        width: 8px;
+        height: 8px;
+        background: #aac9ff;
+        border-radius: 50%;
+        position: fixed;
+        pointer-events: none;
+        z-index: 100000;
+        transition: transform 0.1s ease, width 0.2s, height 0.2s;
+        transform: translate(-50%, -50%);
+        box-shadow: 0 0 15px #6e9eff;
+        will-change: left, top;
+      }
+
+      /* hover effect for links/buttons */
+      .custom-cursor-outer.hover {
+        width: 60px;
+        height: 60px;
+        background: rgba(100, 160, 255, 0.2);
+        border-color: #ffffff;
+        mix-blend-mode: difference;
+      }
+
+      .custom-cursor-inner.hover {
+        width: 12px;
+        height: 12px;
+        background: white;
+      }
+
+      /* text selector effect on paragraphs, headings */
+      .custom-cursor-outer.text-select {
+        width: 8px;
+        height: 60px;
+        border-radius: 10px;
+        border-color: #ffd966;
+        background: rgba(255, 220, 100, 0.2);
+        mix-blend-mode: normal;
+      }
+
+      .custom-cursor-inner.text-select {
+        width: 4px;
+        height: 4px;
+        background: #ffd966;
+        opacity: 0.8;
+      }
+    }
+
+    /* ---------- GLASS CORE ---------- */
+    .glass-card, .navbar-glass, .cert-card, .profile-card, .stat-glass, .social-glass, .footer-glass, .contact-glass {
+      background: rgba(20, 30, 45, 0.25);
+      backdrop-filter: blur(12px) saturate(180%);
+      -webkit-backdrop-filter: blur(12px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 28px;
+      box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255,255,255,0.05);
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top:0; left:0; width:100%; height:100%;
+      background: radial-gradient(circle at 40% 50%, rgba(60, 130, 250, 0.15), transparent 50%),
+                  radial-gradient(circle at 80% 70%, rgba(150, 80, 250, 0.12), transparent 55%),
+                  repeating-linear-gradient(45deg, rgba(255,255,255,0.01) 0px, rgba(255,255,255,0.01) 2px, transparent 2px, transparent 8px);
+      z-index: -2;
+      pointer-events: none;
+    }
+
+    #canvas-3d {
+      position: fixed;
+      top:0; left:0; width:100%; height:100%;
+      z-index: -1;
+      opacity: 0.25;
+      pointer-events: none;
+    }
+
+    /* ---------- NAVBAR ---------- */
+    .navbar-glass {
+      background: rgba(18, 25, 40, 0.5);
+      backdrop-filter: blur(16px) saturate(200%);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 60px;
+      margin-top: 20px;
+      width: 90%;
+      left: 5%;
+      top: 10px;
+      padding: 0.8rem 2rem;
+      box-shadow: 0 15px 35px -10px rgba(0,0,0,0.5);
+    }
+
+    .navbar-glass .navbar-brand {
+      font-weight: 700;
+      font-size: 1.8rem;
+      color: white;
+      letter-spacing: -0.02em;
+      text-shadow: 0 2px 5px rgba(0,30,100,0.5);
+    }
+
+    .navbar-glass .navbar-brand i {
+      color: #a0c0ff;
+      margin-right: 10px;
+    }
+
+    .navbar-glass .nav-link {
+      color: rgba(255,255,255,0.85);
+      font-weight: 500;
+      margin: 0 0.6rem;
+      padding: 0.6rem 1.2rem;
+      border-radius: 40px;
+      transition: 0.2s;
+    }
+
+    .navbar-glass .nav-link:hover {
+      background: rgba(255,255,255,0.1);
+      color: white;
+      backdrop-filter: blur(5px);
+    }
+
+    .navbar-toggler {
+      border: 1px solid rgba(255,255,255,0.3);
+      color: white;
+      background: transparent;
+      padding: 0.6rem 1rem;
+    }
+    .navbar-toggler:focus { box-shadow: none; }
+
+    /* profile image */
+    .profile-wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 1rem;
+    }
+
+    .profile-image {
+      width: 100%;
+      max-width: 360px;
+      height: auto;
+      aspect-ratio: 1/1;
+      object-fit: cover;
+      border-radius: 40px;
+      border: 3px solid rgba(255,255,255,0.25);
+      box-shadow: 0 30px 40px -15px black;
+      transition: 0.3s;
+    }
+
+    .profile-image:hover {
+      transform: scale(1.01);
+      border-color: rgba(255,255,255,0.5);
+    }
+
+    /* certificates */
+    .cert-card {
+      background: rgba(20, 35, 55, 0.3);
+      backdrop-filter: blur(10px);
+      border-radius: 36px;
+      padding: 2.5rem 1.8rem;
+      border: 1px solid rgba(255,255,255,0.1);
+      height: 100%;
+      transition: 0.2s;
+      text-align: center;
+    }
+
+    .cert-card i {
+      font-size: 3.2rem;
+      background: linear-gradient(135deg, #b2cbff, #ffffff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 1.5rem;
+    }
+
+    .cert-card h4 { font-weight: 600; color: white; margin-bottom: 1rem;}
+
+    .cert-badge {
+      background: rgba(90, 140, 255, 0.3);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: white;
+      padding: 0.4rem 1.2rem;
+      border-radius: 40px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      display: inline-block;
+      margin: 0.3rem 0.2rem;
+    }
+
+    .stat-glass {
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 50px;
+      padding: 0.7rem 1.8rem;
+      font-weight: 500;
+      color: rgba(255,255,255,0.9);
+      margin-right: 0.8rem;
+      margin-bottom: 0.8rem;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .social-glass {
+      width: 55px;
+      height: 55px;
+      background: rgba(230, 240, 255, 0.1);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.5rem;
+      transition: 0.2s;
+      text-decoration: none;
+    }
+
+    .social-glass:hover {
+      background: rgba(100, 160, 255, 0.4);
+      transform: translateY(-5px);
+      border-color: white;
+    }
+
+    .btn-glass {
+      background: rgba(60, 130, 255, 0.4);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 40px;
+      padding: 1rem 2.5rem;
+      font-weight: 600;
+      color: white;
+      transition: 0.2s;
+      width: fit-content;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-glass:hover {
+      background: rgba(90, 160, 255, 0.6);
+      border-color: white;
+      box-shadow: 0 10px 25px -5px #2a6eff;
+    }
+
+    /* form */
+    .form-glass input, .form-glass textarea {
+      background: rgba(10, 20, 35, 0.5);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 30px;
+      padding: 1.2rem 1.8rem;
+      color: white;
+      width: 100%;
+      margin-top: 0.3rem;
+    }
+
+    .form-glass input:focus, .form-glass textarea:focus {
+      border-color: #8bb3ff;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(100, 160, 255, 0.3);
+      background: rgba(20, 35, 60, 0.7);
+    }
+
+    .form-glass label {
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+      display: block;
+      color: rgba(255,255,255,0.9);
+      padding-left: 0.8rem;
+    }
+
+    /* section titles */
+    .section-title {
+      font-size: 3rem;
+      font-weight: 700;
+      margin-bottom: 3.5rem;
+      display: inline-block;
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      padding: 0.6rem 2.5rem 0.6rem 2.2rem;
+      border-radius: 80px;
+      border-left: 5px solid #7aa5ff;
+      color: white;
+    }
+
+    .glass-card {
+      background: rgba(20, 35, 55, 0.3);
+      backdrop-filter: blur(14px);
+      border-radius: 42px;
+      padding: 2.8rem 2.5rem;
+      border: 1px solid rgba(255,255,255,0.1);
+      height: 100%;
+    }
+
+    .contact-glass {
+      background: rgba(30, 40, 60, 0.3);
+      backdrop-filter: blur(14px);
+      border-radius: 48px;
+      padding: 3rem 2.8rem;
+    }
+
+    .footer-glass {
+      background: rgba(10, 20, 30, 0.5);
+      backdrop-filter: blur(8px);
+      border-top: 1px solid rgba(255,255,255,0.1);
+      padding: 2.5rem 0;
+      margin-top: 5rem;
+    }
+
+    section {
+      padding: 6rem 0 4rem 0;
+      scroll-margin-top: 100px;
+    }
+
+    #profile { padding-top: 7rem; }
+
+    /* responsive */
+    @media (max-width: 992px) {
+      .navbar-glass { width: 94%; left: 3%; padding: 0.7rem 1.5rem; }
+      .profile-image { max-width: 300px; }
+      .section-title { font-size: 2.5rem; }
+      .glass-card { padding: 2rem 1.8rem; }
+    }
+
+    @media (max-width: 768px) {
+      .navbar-glass .navbar-brand { font-size: 1.5rem; }
+      .profile-image { max-width: 280px; }
+      .section-title { font-size: 2.2rem; padding: 0.5rem 1.8rem; }
+    }
+
+    /* alert */
+    .alert-message {
+      position: fixed;
+      top: 100px; right: 30px;
+      background: rgba(20, 35, 55, 0.7);
+      backdrop-filter: blur(30px);
+      border-left: 6px solid #5f9eff;
+      border-radius: 30px;
+      padding: 1rem 2rem;
+      color: white;
+      font-weight: 500;
+      z-index: 9999;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    .alert-message.error { border-left-color: #ff6b6b; }
+
+    /* theme toggle hidden */
+    .theme-toggle { display: none; }
+
+    /* ensure default cursor on mobile (below lg) */
+    @media (max-width: 991.98px) {
+      * {
+        cursor: auto !important;
+      }
+      .custom-cursor-outer, .custom-cursor-inner {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Custom cursor elements (DESKTOP ONLY) -->
+  <div class="custom-cursor-outer" id="cursorOuter"></div>
+  <div class="custom-cursor-inner" id="cursorInner"></div>
+
+  <!-- 3D canvas background -->
+  <canvas id="canvas-3d"></canvas>
+
+  <!-- glass navbar (no theme icon) -->
+  <nav class="navbar navbar-expand-lg navbar-glass fixed-top">
+    <div class="container-fluid px-4">
+      <a class="navbar-brand d-flex align-items-center" href="#">
+        <i class="bi bi-droplet"></i> Jagathees
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navmenuGlass">
+        <i class="bi bi-list fs-3"></i>
+      </button>
+      <div class="collapse navbar-collapse" id="navmenuGlass">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="#profile">Profile</a></li>
+          <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
+          <li class="nav-item"><a class="nav-link" href="#certificates">Certificates</a></li>
+          <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container mt-5 pt-5">
+
+    <!-- PROFILE SECTION -->
+    <section id="profile">
+      <div class="row align-items-center g-5">
+        <div class="col-lg-5 text-center text-lg-start" data-aos="fade-right">
+          <div class="profile-wrapper">
+            <img src="webimg.jpg" alt="Jagathees" class="profile-image">
+          </div>
+        </div>
+        <div class="col-lg-7" data-aos="fade-left">
+          <div class="glass-card">
+            <h1 class="display-3 fw-bold mb-4" style="color:white;">Jagathees</h1>
+            <p class="fs-3 mb-4" style="color:#b6d0ff;">Web Developer</p>
+            <div class="d-flex flex-wrap gap-2 mb-4">
+              <span class="stat-glass"><i class="bi bi-code-square me-2"></i>Learning Projects</span>
+              <span class="stat-glass"><i class="bi bi-browser-chrome me-2"></i>Frontend Focus</span>
+              <span class="stat-glass"><i class="bi bi-person-workspace me-2"></i>Remote Ready</span>
+            </div>
+            <p class="mb-4 fs-5" style="color: rgba(255,255,255,0.75);">Web Developer crafting responsive, modern, and high-performance websites. I transform ideas into clean, interactive digital experiences using modern web technologies.</p>
+            <a href="#contact" class="btn-glass mt-2">Get in Touch</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABOUT -->
+    <section id="about">
+      <h2 class="section-title" data-aos="fade-up">About</h2>
+      <div class="row g-5">
+        <div class="col-md-6" data-aos="fade-up">
+          <div class="glass-card">
+            <i class="bi bi-compass fs-1 mb-4" style="color: #abc2ff;"></i>
+            <h3 class="mb-3 text-white">My Journey</h3>
+            <p class="text-white-50 mb-4">Started with curiosity, now building for the web</p>
+            <p style="color: rgba(255,255,255,0.7); margin-bottom: 2rem;">My path into web development began with a simple "View Page Source" moment. That curiosity evolved into creating digital experiences that are both functional and beautiful.</p>
+            <div class="d-flex flex-wrap gap-2">
+              <span class="cert-badge">Self-Taught</span>
+              <span class="cert-badge">Continuous Learner</span>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6" data-aos="fade-up" data-aos-delay="100">
+          <div class="glass-card">
+            <i class="bi bi-heart fs-1 mb-4" style="color: #fbb0b0;"></i>
+            <h3 class="mb-3 text-white">What Drives Me</h3>
+            <p class="text-white-50 mb-4">Creating experiences that matter</p>
+            <p style="color: rgba(255,255,255,0.7); margin-bottom: 2rem;">I believe great websites are solutions to real problems. I focus on clarity, performance, and user experience above all else.</p>
+            <div class="d-flex flex-wrap gap-2">
+              <span class="cert-badge">User-Centric</span>
+              <span class="cert-badge">Problem Solver</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Skills row -->
+      <div class="row g-5 mt-4">
+        <div class="col-md-4" data-aos="fade-up">
+          <div class="glass-card text-center h-100">
+            <i class="bi bi-brush fs-1 mb-4" style="color: #b2d8ff;"></i>
+            <h4 class="mb-3 text-white">Design Philosophy</h4>
+            <p class="small text-white-50 mb-3">Clean, responsive, intentional</p>
+            <p style="color: rgba(255,255,255,0.7);">I design with purpose — minimal yet engaging interfaces.</p>
+          </div>
+        </div>
+        <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+          <div class="glass-card text-center h-100">
+            <i class="bi bi-code fs-1 mb-4" style="color: #b2f0d0;"></i>
+            <h4 class="mb-3 text-white">Development Style</h4>
+            <p class="small text-white-50 mb-3">Clean code, best practices</p>
+            <p style="color: rgba(255,255,255,0.7);">Maintainable, scalable code with focus on performance.</p>
+          </div>
+        </div>
+        <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+          <div class="glass-card text-center h-100">
+            <i class="bi bi-eye fs-1 mb-4" style="color: #f9d884;"></i>
+            <h4 class="mb-3 text-white">Future Focus</h4>
+            <p class="small text-white-50 mb-3">Always learning, growing</p>
+            <p style="color: rgba(255,255,255,0.7);">Exploring React, modern CSS, backend integration.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quote -->
+      <div class="glass-card mt-5 p-5 text-center" data-aos="fade-up">
+        <i class="bi bi-quote fs-1 mb-4" style="color: #a6c5ff;"></i>
+        <p class="fs-4 fw-light text-white-50 mb-4">"Great websites turn ideas into experiences. I build the digital platforms that make those ideas accessible to everyone."</p>
+        <span class="text-white-50">— Jagathees, 2026</span>
+      </div>
+    </section>
+
+    <!-- CERTIFICATES -->
+    <section id="certificates">
+      <h2 class="section-title" data-aos="fade-up">Certificates</h2>
+      <div class="row g-5">
+        <div class="col-lg-3 col-md-6" data-aos="fade-up">
+          <div class="cert-card">
+            <i class="bi bi-filetype-html"></i>
+            <h4>HTML</h4>
+            <p class="small text-white-50 mb-4">Infosys Spring Board · 2025</p>
+            <p class="text-white-50 mb-4">HTML5, semantic markup, structured web.</p>
+            <div><span class="cert-badge">HTML5</span><span class="cert-badge">Semantic</span></div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="100">
+          <div class="cert-card">
+            <i class="bi bi-filetype-css"></i>
+            <h4>CSS</h4>
+            <p class="small text-white-50 mb-4">Infosys Spring Board · 2025</p>
+            <p class="text-white-50 mb-4">Flexbox, Grid, modern styling, animation.</p>
+            <div><span class="cert-badge">Flexbox</span><span class="cert-badge">Grid</span></div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="200">
+          <div class="cert-card">
+            <i class="bi bi-filetype-js"></i>
+            <h4>JavaScript</h4>
+            <p class="small text-white-50 mb-4">Infosys Spring Board · 2025</p>
+            <p class="text-white-50 mb-4">ES6+, DOM, async, dynamic apps.</p>
+            <div><span class="cert-badge">ES6+</span><span class="cert-badge">DOM</span></div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="300">
+          <div class="cert-card">
+            <i class="bi bi-database"></i>
+            <h4>SQL</h4>
+            <p class="small text-white-50 mb-4">Infosys Spring Board · 2025</p>
+            <p class="text-white-50 mb-4">MySQL, queries, relational databases.</p>
+            <div><span class="cert-badge">MySQL</span><span class="cert-badge">Queries</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contact">
+      <h2 class="section-title" data-aos="fade-up">Contact</h2>
+      <div class="row g-5">
+        <div class="col-lg-6" data-aos="fade-right">
+          <div class="glass-card">
+            <h3 class="mb-5 text-white"><i class="bi bi-envelope-paper me-2" style="color:#8db3ff;"></i>Send a Message</h3>
+            <form class="form-glass" id="contactForm">
+              <div class="mb-5">
+                <label>Name</label>
+                <input type="text" id="name" placeholder="Your name" required>
+              </div>
+              <div class="mb-5">
+                <label>Email</label>
+                <input type="email" id="email" placeholder="your@email.com" required>
+              </div>
+              <div class="mb-5">
+                <label>Message</label>
+                <textarea id="message" rows="5" placeholder="Tell me about your project..." required></textarea>
+              </div>
+              <button type="submit" class="btn-glass w-100" id="submitBtn">
+                <span id="btnText">Send Message</span>
+                <span id="btnSpinner" class="spinner-border spinner-border-sm ms-2 d-none"></span>
+              </button>
+            </form>
+          </div>
+        </div>
+        <div class="col-lg-6" data-aos="fade-left">
+          <div class="contact-glass h-100 d-flex flex-column justify-content-center">
+            <i class="bi bi-qr-code fs-1 mb-5" style="color: #a8c3ff;"></i>
+            <h3 class="mb-4 text-white">Contact Information</h3>
+            <p class="fs-5 mb-4"><i class="bi bi-geo-alt me-3" style="color:#a0bdff;"></i> Udumalaipet, India</p>
+            <p class="fs-5 mb-4"><i class="bi bi-telephone me-3" style="color:#b2d3ff;"></i> +91 8124538070</p>
+            <p class="fs-5 mb-5">
+              <i class="bi bi-envelope me-3" style="color:#f9b5b5;"></i>
+              <a href="mailto:jagatheesubramanian@gmail.com" style="color:white; border-bottom:1px dashed #8cb0ff; text-decoration:none;">jagatheesubramanian@gmail.com</a>
+            </p>
+            <div class="d-flex gap-4 mt-3">
+              <a href="https://github.com/jagatheessubramanian-art" target="_blank" class="social-glass"><i class="bi bi-github"></i></a>
+              <a href="https://www.linkedin.com/in/jagathees-s-51a491375/" target="_blank" class="social-glass"><i class="bi bi-linkedin"></i></a>
+              <a href="mailto:jagatheesubramanian@gmail.com" class="social-glass"><i class="bi bi-envelope-fill"></i></a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer-glass">
+    <div class="container text-center">
+      <p class="mb-3"><i class="bi bi-droplet me-2" style="color:#8eb5ff;"></i> Jagathees · Web Developer portfolio © 2026</p>
+      <p class="small text-white-50">
+        <a href="mailto:jagatheesubramanian@gmail.com" class="text-white-50 text-decoration-none mx-2">Email</a> · 
+        <a href="https://github.com/jagatheessubramanian-art" class="text-white-50 text-decoration-none mx-2">GitHub</a> · 
+        <a href="https://www.linkedin.com/in/jagathees-s-51a491375/" class="text-white-50 text-decoration-none mx-2">LinkedIn</a>
+      </p>
+    </div>
+  </footer>
+
+  <div id="alertContainer"></div>
+
+  <!-- scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+  <script>
+    (function(){ emailjs.init("YOUR_PUBLIC_KEY"); })();
+    AOS.init({ duration: 800, once: true, offset: 60 });
+
+    // ---------- CUSTOM CURSOR (DESKTOP ONLY) ----------
+    (function initCustomCursor() {
+      if (window.innerWidth < 992) return; // no cursor on mobile
+
+      const cursorOuter = document.getElementById('cursorOuter');
+      const cursorInner = document.getElementById('cursorInner');
+
+      if (!cursorOuter || !cursorInner) return;
+
+      // track mouse position
+      let mouseX = 0, mouseY = 0;
+      let outerX = 0, outerY = 0;
+      let innerX = 0, innerY = 0;
+
+      document.addEventListener('mousemove', (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+      });
+
+      // smooth following (outer with slight lag)
+      function smoothFollow() {
+        // outer follows with gentle easing
+        outerX += (mouseX - outerX) * 0.15;
+        outerY += (mouseY - outerY) * 0.15;
+        // inner is faster
+        innerX += (mouseX - innerX) * 0.35;
+        innerY += (mouseY - innerY) * 0.35;
+
+        cursorOuter.style.left = outerX + 'px';
+        cursorOuter.style.top = outerY + 'px';
+        cursorInner.style.left = innerX + 'px';
+        cursorInner.style.top = innerY + 'px';
+
+        requestAnimationFrame(smoothFollow);
+      }
+      smoothFollow();
+
+      // hover effect for interactive elements
+      const interactiveSelectors = 'a, button, .btn-glass, .nav-link, .social-glass, .cert-card, .profile-image, .stat-glass, input, textarea, [type="submit"]';
+      const interactiveElements = document.querySelectorAll(interactiveSelectors);
+
+      interactiveElements.forEach(el => {
+        el.addEventListener('mouseenter', () => {
+          cursorOuter.classList.add('hover');
+          cursorInner.classList.add('hover');
+        });
+        el.addEventListener('mouseleave', () => {
+          cursorOuter.classList.remove('hover');
+          cursorInner.classList.remove('hover');
+        });
+      });
+
+      // text selection effect on paragraphs, headings, etc.
+      const textElements = document.querySelectorAll('p, h1, h2, h3, h4, h5, h6, span:not(.cert-badge), .text-muted, label');
+      textElements.forEach(el => {
+        el.addEventListener('mouseenter', () => {
+          cursorOuter.classList.add('text-select');
+          cursorInner.classList.add('text-select');
+        });
+        el.addEventListener('mouseleave', () => {
+          cursorOuter.classList.remove('text-select');
+          cursorInner.classList.remove('text-select');
+        });
+      });
+
+      // hide cursor when leaving window
+      document.addEventListener('mouseleave', () => {
+        cursorOuter.style.opacity = '0';
+        cursorInner.style.opacity = '0';
+      });
+      document.addEventListener('mouseenter', () => {
+        cursorOuter.style.opacity = '1';
+        cursorInner.style.opacity = '1';
+      });
+    })();
+
+    // Three.js background (identical to original)
+    const canvas = document.getElementById('canvas-3d');
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.setPixelRatio(devicePixelRatio);
+    const particlesGeo = new THREE.BufferGeometry();
+    const count = 600;
+    const pos = new Float32Array(count*3);
+    for(let i=0; i<count*3; i+=3){
+      pos[i] = (Math.random()-0.5)*120;
+      pos[i+1] = (Math.random()-0.5)*120;
+      pos[i+2] = (Math.random()-0.5)*120;
+    }
+    particlesGeo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+    const particlesMat = new THREE.PointsMaterial({ size:0.15, color:0x6d9eff, transparent:true, opacity:0.1 });
+    const mesh = new THREE.Points(particlesGeo, particlesMat);
+    scene.add(mesh);
+    camera.position.z = 50;
+    function animate(){ requestAnimationFrame(animate); mesh.rotation.y += 0.0002; renderer.render(scene,camera); }
+    animate();
+    window.addEventListener('resize', ()=>{ camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); });
+
+    // Alert helper
+    function showAlert(msg, type='success'){
+      const c = document.getElementById('alertContainer');
+      const d = document.createElement('div');
+      d.className = `alert-message ${type}`;
+      d.innerText = msg;
+      c.appendChild(d);
+      setTimeout(()=>{ d.style.opacity='0'; setTimeout(()=>{ if(c.contains(d)) c.removeChild(d); },400); },4000);
+    }
+
+    // Contact form
+    const form = document.getElementById('contactForm');
+    const btn = document.getElementById('submitBtn');
+    const btnText = document.getElementById('btnText');
+    const spinner = document.getElementById('btnSpinner');
+    form.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const message = document.getElementById('message').value.trim();
+      if(!name || !email || !message) return showAlert('Please fill all fields','error');
+      if(!email.includes('@')||!email.includes('.')) return showAlert('Valid email required','error');
+      btnText.innerText = 'Sending...'; spinner.classList.remove('d-none'); btn.disabled = true;
+      try {
+        await new Promise(r=>setTimeout(r,1200));
+        showAlert('✅ Message sent! I\'ll reply soon.','success');
+        form.reset();
+      } catch (err){ showAlert('❌ Failed. Try direct email.','error'); }
+      finally { btnText.innerText = 'Send Message'; spinner.classList.add('d-none'); btn.disabled = false; }
+    });
+
+    // smooth scroll
+    document.querySelectorAll('a[href^="#"]').forEach(a=> a.addEventListener('click', (e)=>{
+      e.preventDefault();
+      const t = document.querySelector(a.getAttribute('href'));
+      if(t) window.scrollTo({ top: t.offsetTop-90, behavior:'smooth' });
+    }));
+  </script>
+</body>
+</html>
